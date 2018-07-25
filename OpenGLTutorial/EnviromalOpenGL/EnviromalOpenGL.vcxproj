@@ -15,11 +15,15 @@
     <ClCompile Include="src\Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="header\Camera.h" />
     <ClInclude Include="header\Shader.h" />
+    <ClInclude Include="WorkWithFile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\default.frag" />
     <None Include="shaders\default.vs" />
+    <None Include="shaders\lamp.frag" />
+    <None Include="shaders\lamp.vs" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{708D3082-94D6-4CC1-951A-CCC7DD57BA39}</ProjectGuid>
@@ -52,8 +56,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);G:\OpenGL\BeginOpenGL\OpenGLTutorial\EnviromalOpenGL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);G:\OpenGL\BeginOpenGL\OpenGLTutorial\EnviromalOpenGL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(ProjectDir)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -66,12 +70,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>G:\OpenGL\BeginOpenGL\OpenGLTutorial\EnviromalOpenGL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>G:\OpenGL\BeginOpenGL\OpenGLTutorial\EnviromalOpenGL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;GLU32.LIB;glut32.lib;OPENGL32.LIB;SOIL.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>

@@ -29,12 +29,24 @@
     <ClInclude Include="header\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WorkWithFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\default.frag">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\default.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\lamp.vs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\lamp.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

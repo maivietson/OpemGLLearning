@@ -13,6 +13,8 @@
 
 // Other includes
 #include "../header/Shader.h"
+#include "../WorkWithFile.h"
+#include "../header/Camera.h"
 
 // Other Libs
 #include <SOIL\SOIL.h>
@@ -23,6 +25,8 @@
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void do_movement();
 
 // window dimensions
@@ -30,10 +34,23 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 
 // variable global
 GLfloat mixValue = 0.2f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraPos =	glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraUp =	glm::vec3(0.0f, 1.0f,  0.0f);
+// Yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right
+// (due to how Eular angles work) so we initially rotate a bit to the left
+// GLfloat yaw			= -90.0f;
+// GLfloat pitch		= 0.0f;
+// GLfloat lastX		= WIDTH / 2.0;
+// GLfloat lastY		= HEIGHT / 2.0;
+
+// Camera
+Camera camera(glm::vec3(0.f, 0.f, 3.f));
 bool keys[1024];
+bool scroll[1024];
+GLfloat lastX = 400, lastY = 300;
+bool firstMouse = true;
+std::string contextString;
 
 // Deltatime
 GLfloat deltaTime = 0.0f;
@@ -56,6 +73,7 @@ int main()
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+	glfwSetWindowPos(window, 400, 400);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -66,6 +84,11 @@ int main()
 
 	// Set the required callback functions
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	// GLFW Options
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -101,10 +124,10 @@ int main()
 	// Set up vertex data (and buffer(s)) and attributes pointers
 	GLfloat vertices2[] = {
 		// Position						// Color						// Texture Coords
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,					// Top Right
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,					// Bottom Right
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,					// Top Right
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,					// Bottom Right
 		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,					// Bottom Left
-		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f					// Top Left
+		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f					// Top Left
 	};
 	GLuint indices[] = {				// Note that we start from 0
 		0, 1, 3,						// First Triangle
@@ -119,60 +142,60 @@ int main()
 	// Data for cube
 	GLfloat vertices[] = {
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+		 0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		 0.5f,  0.5f, 0.5f, 1.0f, 1.0f,
+		 0.5f,  0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f,  0.5f, 0.5f, 0.0f, 1.0f,
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
 
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
 		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
 
 		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
 		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+		 0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		 0.5f, 0.5f,  0.5f, 1.0f, 0.0f,
+		 0.5f, 0.5f,  0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f,  0.5f, 0.0f, 0.0f,
 		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f
 	};
 
 	// World space positions of our cubes
 	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(2.0f, 5.0f, -15.0f),
+		glm::vec3( 0.0f,  0.0f,  0.0f),
+		glm::vec3( 2.0f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
 		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f, 3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f, 2.0f, -2.5f),
-		glm::vec3(1.5f, 0.2f, -1.5f),
-		glm::vec3(-1.3f, 1.0f, -1.5f)
+		glm::vec3( 2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3( 1.3f, -2.0f, -2.5f),
+		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 	//*                                                                                                              *//
 	//****************************************************************************************************************//
@@ -289,9 +312,6 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		// Set the required callback functions
-		glfwSetKeyCallback(window, key_callback);
-
 		// check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding reponse functions
 		glfwPollEvents();
 		do_movement();
@@ -300,10 +320,6 @@ int main()
 		// clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Transfer data to uniform of fragment shader
-		//		auto t_now = std::chrono::high_resolution_clock::now();
-		//		float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
 
 		// Active shader
 		ourShader.Use();
@@ -316,20 +332,20 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
 
+		// Get location of uniform lightColor and ObjectColor
+		GLint objectColorLoc = glGetUniformLocation(ourShader.Program, "objectColor");
+		GLint lightColorLoc  = glGetUniformLocation(ourShader.Program, "lightColor");
+		glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+		glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f);
+
+
 		// Set current value of uniform mix
 		glUniform1f(glGetUniformLocation(ourShader.Program, "mixValue"), mixValue);
 
 		// Camera/View transformation
-		glm::mat4 view(1.0f);
-		GLfloat radius = 10.0f;
-		GLfloat camX = sin(glfwGetTime()) * radius;
-		GLfloat camZ = cos(glfwGetTime()) * radius;
-		//		view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-		//Projection
-		glm::mat4 projection(1.0f);
-		projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view, projection;
+		view = camera.GetViewMatrix();
+		projection = glm::perspective(camera.Zoom, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 
 		// Get their uniform location
 		GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
@@ -359,6 +375,15 @@ int main()
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 	}
+	//*                                                                                                              *//
+	//****************************************************************************************************************//
+
+
+	//****************************************************************************************************************//
+	//*                                     Write File                                                               *//
+	//*                                                                                                              *//
+	WorkWithFile("LogPosition.txt", contextString);
+	contextString.clear();
 	//*                                                                                                              *//
 	//****************************************************************************************************************//
 
@@ -399,15 +424,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 void do_movement()
 {
 	// Camera Controls
-	GLfloat cameraSpeed = 5.0f * deltaTime;
 	if (keys[GLFW_KEY_W])
-		cameraPos += cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(FORWARD, deltaTime);
 	if (keys[GLFW_KEY_S])
-		cameraPos -= cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
 	if (keys[GLFW_KEY_A])
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (keys[GLFW_KEY_D])
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(RIGHT, deltaTime);
 	if (keys[GLFW_KEY_K])
 	{
 		mixValue -= 0.01f;
@@ -420,4 +444,36 @@ void do_movement()
 		if (mixValue >= 1.0f)
 			mixValue = 1.0f;
 	}
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	std::stringstream text;
+	// display position
+	text << "xpos: " << xpos << std::endl;
+	text << "ypos: " << ypos << std::endl;
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	GLfloat xoffset = xpos - lastX;
+	GLfloat yoffset = ypos - lastY;
+	lastX = xpos;
+	lastY = ypos;
+
+	text << "xoffset: " << xoffset << std::endl;
+	text << "yoffset: " << yoffset << std::endl;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+
+	contextString.append(text.str());
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset);
 }
